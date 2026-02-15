@@ -64,7 +64,7 @@ builder.Services.AddScoped<PasswordService>();
 var jwtSettings = builder.Configuration
     .GetSection("Jwt")
     .Get<JwtSettings>();
-    Console.WriteLine(jwtSettings?.Key);
+  
 
 
 builder.Services.AddSingleton(jwtSettings);

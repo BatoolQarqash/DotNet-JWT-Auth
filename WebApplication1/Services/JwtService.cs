@@ -15,11 +15,12 @@ namespace WebApplication1.Services
             _jwtSettings = jwtSettings;
         }
 
-        public string GenerateToken(string email)
+        public string GenerateToken(string email, string role)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.Email, email)
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Role, role) // ✅ role claim
             };
 
             var key = new SymmetricSecurityKey(

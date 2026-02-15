@@ -39,7 +39,8 @@ namespace WebApplication1.Controllers
             {
                 Email = request.Email,
                 PasswordHash = hashedPassword,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Role = "User" // ✅ default role
             };
 
             _context.Users.Add(user);
@@ -70,7 +71,7 @@ namespace WebApplication1.Controllers
                 return Unauthorized("Invalid email or password");
             }
 
-            var token = _jwtService.GenerateToken(user.Email);
+            var token = _jwtService.GenerateToken(user.Email, user.Role);
 
             return Ok(new
             {
@@ -85,5 +86,14 @@ namespace WebApplication1.Controllers
         {
             return Ok("You are authorized!");
         }
+
+        // ✅ Admin-only endpoint
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-secret")]
+        public IActionResult AdminSecret()
+        {
+            return Ok("You are ADMIN!");
+        }
+
     }
 }
