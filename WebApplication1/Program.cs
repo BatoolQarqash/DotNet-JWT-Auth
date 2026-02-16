@@ -6,15 +6,14 @@ using System.Text;
 using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.Services;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===============================
 // 1️⃣ Add Services
 // ===============================
-
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 
 // 🔐 Swagger + JWT Configuration
@@ -27,8 +26,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Paste ONLY the JWT token (without 'Bearer ')"
-
+        Description = "Paste JWT token. (Try with: Bearer <token>)"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -42,38 +40,38 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
 
 // ===============================
-// 2️⃣ Database
+// 2️⃣ Database (✅ ثابت + واضح)
 // ===============================
+// نخزن DB في نفس مجلد المشروع (ContentRootPath)
+var dbPath = Path.Combine(builder.Environment.ContentRootPath, "app.db");
+Console.WriteLine("✅ DB Path Used By App: " + dbPath);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=app.db"));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 // ===============================
 // 3️⃣ Custom Services
 // ===============================
-
-builder.Services.AddScoped<PasswordService>();
-
-// JWT Settings
 var jwtSettings = builder.Configuration
     .GetSection("Jwt")
-    .Get<JwtSettings>();
-  
-
+    .Get<JwtSettings>()
+    ?? throw new InvalidOperationException("Jwt section is missing in appsettings.json");
 
 builder.Services.AddSingleton(jwtSettings);
+
+builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<NotesService>();
 
 // ===============================
 // 4️⃣ Authentication
 // ===============================
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -97,15 +95,26 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // ===============================
-// 5️⃣ Middleware Pipeline
+// ✅ 5️⃣ Auto-Apply Migrations (الحل الجذري)
 // ===============================
+// هذا يضمن إنه نفس DB اللي التطبيق يستخدمها رح تنطبق عليها كل migrations
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+    Console.WriteLine("✅ Applying migrations (if any)...");
+    db.Database.Migrate();
+    Console.WriteLine("✅ Database is ready.");
+}
+
+// ===============================
+// 6️⃣ Middleware Pipeline
+// ===============================
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseAuthentication();   // لازم قبل Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();

@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using WebApplication1.Data;
 using WebApplication1.Models;
 
 namespace WebApplication1.Services
@@ -15,10 +16,12 @@ namespace WebApplication1.Services
             _jwtSettings = jwtSettings;
         }
 
-        public string GenerateToken(string email, string role)
+        public string GenerateToken(int userId, string email, string role)
         {
             var claims = new[]
             {
+                // ✅ 1) UserId claim (standard)
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Role, role) // ✅ role claim
             };
