@@ -1,0 +1,170 @@
+﻿<!-- wwwroot/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog Admin - Simple UI</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">B</div>
+      <div class="brandText">
+        <div class="brandTitle">Blog Admin</div>
+        <div class="brandSub">HTML/CSS UI to test your ASP.NET Core API</div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="baseBox">
+        <div class="muted">API Base URL</div>
+        <input id="apiBase" class="input" type="text" value="" readonly />
+      </div>
+      <button id="btnPing" class="btn">Ping</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Status -->
+    <section class="card">
+      <div class="cardHead">
+        <h2>Status</h2>
+        <button id="btnLogout" class="btn btn-ghost" disabled>Logout</button>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Token</label>
+          <textarea id="tokenBox" class="textarea" rows="3" placeholder="Token will appear here..." readonly></textarea>
+          <div class="hint">Token is saved in browser (localStorage) so you stay logged in.</div>
+        </div>
+
+        <div>
+          <label class="label">Quick Check</label>
+          <div class="row gap">
+            <button id="btnMe" class="btn btn-ghost" disabled>GET /api/auth/me</button>
+            <button id="btnAdminSecret" class="btn btn-ghost" disabled>GET /api/auth/admin-secret</button>
+          </div>
+          <pre id="statusOut" class="out"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Login -->
+    <section class="card">
+      <div class="cardHead">
+        <h2>Admin Login</h2>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Email</label>
+          <input id="email" class="input" type="email" placeholder="admin@example.com" />
+        </div>
+        <div>
+          <label class="label">Password</label>
+          <input id="password" class="input" type="password" placeholder="********" />
+        </div>
+      </div>
+
+      <div class="row gap top8">
+        <button id="btnLogin" class="btn">Login</button>
+        <div id="loginOut" class="pill"></div>
+      </div>
+
+      <div class="hint">
+        After login, the token is stored and used automatically for Admin endpoints.
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="card">
+      <div class="cardHead">
+        <h2>Categories</h2>
+        <div class="row gap">
+          <button id="btnLoadCategories" class="btn btn-ghost" disabled>Load</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Create Category</label>
+          <div class="row gap">
+            <input id="catName" class="input" type="text" placeholder="Technology" />
+            <button id="btnCreateCategory" class="btn" disabled>Create</button>
+          </div>
+          <pre id="catsOut" class="out"></pre>
+        </div>
+
+        <div class="tableWrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width:80px;">Id</th>
+                <th>Name</th>
+                <th style="width:180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="catsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Posts -->
+    <section class="card">
+      <div class="cardHead">
+        <h2>Posts</h2>
+        <div class="row gap">
+          <button id="btnLoadPosts" class="btn btn-ghost" disabled>Load</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Create Post</label>
+
+          <label class="label small">Title</label>
+          <input id="postTitle" class="input" type="text" placeholder="Post title" />
+
+          <label class="label small top8">Description</label>
+          <textarea id="postDesc" class="textarea" rows="3" placeholder="Post description"></textarea>
+
+          <label class="label small top8">Note (optional)</label>
+          <input id="postNote" class="input" type="text" placeholder="Optional note..." />
+
+          <div class="grid2 top8">
+            <div>
+              <label class="label small">Category</label>
+              <select id="postCategory" class="input"></select>
+            </div>
+            <div>
+              <label class="label small">Image (optional)</label>
+              <input id="postImage" class="input" type="file" accept="image/*" />
+            </div>
+          </div>
+
+          <div class="row gap top8">
+            <button id="btnCreatePost" class="btn" disabled>Create Post</button>
+            <div id="postCreateOut" class="pill"></div>
+          </div>
+
+          <pre id="postsOut" class="out"></pre>
+        </div>
+
+        <div>
+          <div id="postsList" class="postsList"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span class="muted">Tip:</span> Run backend in Visual Studio and open this page from the same backend origin.
+  </footer>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -7,13 +7,19 @@ using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.Services;
 using System.IO;
+using System.Text.Json.Serialization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===============================
 // 1️⃣ Add Services
 // ===============================
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+.AddJsonOptions(options =>
+ {
+     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+ });
 builder.Services.AddEndpointsApiExplorer();
 
 // 🔐 Swagger + JWT Configuration
@@ -92,6 +98,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+//==============================================
+//add Cors
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+    {
+        policy
+            .SetIsOriginAllowed(_ => true) // يسمح لأي origin
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
 // ===============================
@@ -106,12 +126,19 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
     Console.WriteLine("✅ Database is ready.");
 }
+await WebApplication1.Data.AdminSeeder.SeedAdminAsync(app.Services);
+
 
 // ===============================
 // 6️⃣ Middleware Pipeline
 // ===============================
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseDefaultFiles();
+
+app.UseStaticFiles();
+
 
 app.UseAuthentication();
 app.UseAuthorization();
