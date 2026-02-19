@@ -1,30 +1,31 @@
-﻿// wwwroot/app.js
+﻿console.log("app.js loaded ✅");
 
 // ===== Helpers =====
 const $ = (id) => document.getElementById(id);
 
-// We serve frontend from the SAME backend origin => no CORS issues.
 function getBase() {
     return window.location.origin;
 }
 
+// ===== Auth Token (internal only) =====
+const TOKEN_KEY = "jwt";
+
 function getToken() {
-    return localStorage.getItem("jwt") || "";
+    return localStorage.getItem(TOKEN_KEY) || "";
 }
 
 function setToken(token) {
-    localStorage.setItem("jwt", token);
-    $("tokenBox").value = token || "";
-    setAuthedUI(!!token);
+    localStorage.setItem(TOKEN_KEY, token);
+    // ✅ ما في tokenBox
 }
 
 function clearToken() {
-    localStorage.removeItem("jwt");
-    $("tokenBox").value = "";
-    setAuthedUI(false);
+    localStorage.removeItem(TOKEN_KEY);
+    // ✅ ما في tokenBox
 }
 
-function setAuthedUI(isAuthed) {
+// ===== UI State =====
+function setAuthUI(isAuthed, me = null) {
     $("btnLogout").disabled = !isAuthed;
     $("btnMe").disabled = !isAuthed;
     $("btnAdminSecret").disabled = !isAuthed;
@@ -35,19 +36,31 @@ function setAuthedUI(isAuthed) {
     $("btnLoadPosts").disabled = !isAuthed;
     $("btnCreatePost").disabled = !isAuthed;
 
-    if (isAuthed) {
-        loadCategories();
-        loadPosts();
-    } else {
+    // status pills
+    $("authBadge").textContent = isAuthed ? "✅ Logged in" : "🔒 Logged out";
+    $("authEmail").textContent = `Email: ${isAuthed ? (me?.email ?? "—") : "—"}`;
+    $("authRole").textContent = `Role: ${isAuthed ? (me?.role ?? "—") : "—"}`;
+
+    if (!isAuthed) {
         $("catsTbody").innerHTML = "";
         $("postCategory").innerHTML = "";
         $("postsList").innerHTML = "";
+        return;
     }
+
+    // Auto load data after login
+    loadCategories();
+    loadPosts();
 }
 
+function pretty(obj) {
+    if (obj == null) return "";
+    return typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+}
+
+// ===== API Fetch (auto adds Authorization) =====
 async function apiFetch(path, options = {}) {
-    const base = getBase();
-    const url = `${base}${path}`;
+    const url = `${getBase()}${path}`;
 
     const headers = options.headers ? { ...options.headers } : {};
     const token = getToken();
@@ -60,21 +73,33 @@ async function apiFetch(path, options = {}) {
     try { data = text ? JSON.parse(text) : null; } catch { data = text; }
 
     if (!res.ok) {
-        const msg = (data && data.message)
-            ? data.message
-            : (typeof data === "string" ? data : JSON.stringify(data));
+        const msg =
+            data && data.message ? data.message :
+                (typeof data === "string" ? data : JSON.stringify(data));
         throw new Error(`HTTP ${res.status}: ${msg}`);
     }
 
     return data;
 }
 
-function pretty(obj) {
-    if (obj == null) return "";
-    return typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+// ===== Auth =====
+async function refreshAuth() {
+    const token = getToken();
+    if (!token) {
+        setAuthUI(false);
+        return;
+    }
+
+    try {
+        const me = await apiFetch("/api/auth/me");
+        setAuthUI(true, me);
+    } catch {
+        clearToken();
+        setAuthUI(false);
+        $("statusOut").textContent = "⚠️ Session expired. Please login again.";
+    }
 }
 
-// ===== Auth =====
 async function login() {
     $("loginOut").textContent = "";
     try {
@@ -93,6 +118,8 @@ async function login() {
         if (!token) throw new Error("Token missing in response.");
 
         setToken(token);
+        await refreshAuth();
+
         $("loginOut").textContent = "✅ Logged in successfully.";
         $("loginOut").style.color = "var(--accent)";
     } catch (e) {
@@ -100,6 +127,17 @@ async function login() {
         $("loginOut").style.color = "var(--danger)";
     }
 }
+
+function logout() {
+    clearToken();
+    setAuthUI(false);
+    $("statusOut").textContent = "Logged out.";
+
+    $("password").value = "";
+    // اختياري: امسحي الايميل كمان
+    // $("email").value = "";
+}
+
 
 async function me() {
     $("statusOut").textContent = "";
@@ -121,12 +159,10 @@ async function adminSecret() {
     }
 }
 
-// Ping a dedicated endpoint (more stable than swagger path).
 async function ping() {
     $("statusOut").textContent = "";
     try {
-        const base = getBase();
-        const res = await fetch(base + "/swagger/index.html"); // should exist in dev
+        const res = await fetch(getBase() + "/swagger/index.html");
         $("statusOut").textContent = res.ok
             ? "✅ API reachable."
             : `⚠️ API reachable but returned: ${res.status}`;
@@ -338,10 +374,7 @@ async function createPost() {
         const file = $("postImage").files?.[0];
         if (file) form.append("Image", file);
 
-        const data = await apiFetch("/api/admin/posts", {
-            method: "POST",
-            body: form
-        });
+        const data = await apiFetch("/api/admin/posts", { method: "POST", body: form });
 
         $("postTitle").value = "";
         $("postDesc").value = "";
@@ -372,14 +405,10 @@ async function deletePost(id) {
 
 // ===== Wire up =====
 window.addEventListener("DOMContentLoaded", () => {
-    // set base box (readonly) to same origin
     $("apiBase").value = getBase();
 
-    // restore token if exists
-    setToken(getToken());
-
     $("btnLogin").onclick = login;
-    $("btnLogout").onclick = () => { clearToken(); $("statusOut").textContent = "Logged out."; };
+    $("btnLogout").onclick = logout;
 
     $("btnPing").onclick = ping;
     $("btnMe").onclick = me;
@@ -391,5 +420,5 @@ window.addEventListener("DOMContentLoaded", () => {
     $("btnLoadPosts").onclick = loadPosts;
     $("btnCreatePost").onclick = createPost;
 
-    $("tokenBox").value = getToken();
+    refreshAuth();
 });

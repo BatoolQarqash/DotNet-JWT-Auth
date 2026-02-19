@@ -132,13 +132,11 @@ await WebApplication1.Data.AdminSeeder.SeedAdminAsync(app.Services);
 // ===============================
 // 6️⃣ Middleware Pipeline
 // ===============================
-app.UseSwagger();
-app.UseSwaggerUI();
-
 app.UseDefaultFiles();
-
 app.UseStaticFiles();
 
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();

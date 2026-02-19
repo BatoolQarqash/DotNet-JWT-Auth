@@ -35,20 +35,29 @@
       </div>
 
       <div class="grid2">
-        <div>
-          <label class="label">Token</label>
-          <textarea id="tokenBox" class="textarea" rows="3" placeholder="Token will appear here..." readonly></textarea>
-          <div class="hint">Token is saved in browser (localStorage) so you stay logged in.</div>
-        </div>
+          <div>
+              <label class="label">Auth</label>
 
-        <div>
-          <label class="label">Quick Check</label>
-          <div class="row gap">
-            <button id="btnMe" class="btn btn-ghost" disabled>GET /api/auth/me</button>
-            <button id="btnAdminSecret" class="btn btn-ghost" disabled>GET /api/auth/admin-secret</button>
+              <div class="row gap top8">
+                  <span class="pill" id="authBadge">🔒 Logged out</span>
+                  <span class="pill" id="authEmail">Email: —</span>
+                  <span class="pill" id="authRole">Role: —</span>
+              </div>
+
+              <div class="hint">
+                  Token is stored internally (localStorage) and used automatically in Authorization header.
+              </div>
           </div>
-          <pre id="statusOut" class="out"></pre>
-        </div>
+
+
+          <div>
+              <label class="label">Quick Check</label>
+              <div class="row gap">
+                  <button id="btnMe" class="btn btn-ghost" disabled>GET /api/auth/me</button>
+                  <button id="btnAdminSecret" class="btn btn-ghost" disabled>GET /api/auth/admin-secret</button>
+              </div>
+              <pre id="statusOut" class="out"></pre>
+          </div>
       </div>
     </section>
 
